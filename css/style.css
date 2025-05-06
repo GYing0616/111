@@ -1,0 +1,164 @@
+:root {
+    --primary-color: #4a90e2;
+    --secondary-color: #f5f5f5;
+    --text-color: #333;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: system-ui, -apple-system, "微軟正黑體", sans-serif;
+    line-height: 1.6;
+    color: var(--text-color);
+}
+
+#app {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding: 1rem;
+    background-color: var(--secondary-color);
+}
+
+main {
+    min-height: 70vh;
+}
+
+footer {
+    text-align: center;
+    padding: 1rem;
+    margin-top: 2rem;
+    border-top: 1px solid #eee;
+}
+
+#game-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+#puzzle-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+    width: 300px;
+    height: 300px;
+    margin: 0 auto;
+    background: #ddd;
+    padding: 2px;
+    border-radius: 4px;
+}
+
+.puzzle-piece {
+    width: 100%;
+    height: 100%;
+    background: var(--primary-color);
+    cursor: move;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: white;
+    user-select: none;
+    transition: transform 0.2s;
+}
+
+.puzzle-piece:hover {
+    transform: scale(1.05);
+}
+
+#game-controls {
+    text-align: center;
+}
+
+#player-info {
+    margin: 1rem 0;
+    text-align: center;
+}
+
+#player-info input {
+    padding: 8px;
+    margin-right: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+button {
+    padding: 8px 16px;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+button:hover {
+    background: #357abd;
+}
+
+#online-players {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin: 10px 0;
+    flex-wrap: wrap;
+}
+
+.player-badge {
+    background: var(--secondary-color);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+}
+
+#chat-container {
+    max-width: 300px;
+    margin: 20px auto;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+#chat-messages {
+    height: 200px;
+    overflow-y: auto;
+    padding: 10px;
+    background: white;
+}
+
+.chat-message {
+    margin-bottom: 8px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    background: #f0f0f0;
+}
+
+#chat-input {
+    display: flex;
+    padding: 10px;
+    gap: 8px;
+    border-top: 1px solid #ddd;
+}
+
+#message-input {
+    flex: 1;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+#timer {
+    font-size: 1.2em;
+    margin: 10px 0;
+    font-weight: bold;
+}
