@@ -32,13 +32,10 @@ const initializePuzzle = () => {
 
 // 檢查拼圖是否完成
 const checkPuzzleComplete = (pieces) => {
-    console.log('檢查遊戲是否完成:', pieces); // 新增除錯訊息
-    // 檢查每個數字是否對應其顯示的文字減1
+    // 檢查顯示的數字是否按照 1-9 的順序排列
     return pieces.every((num, index) => {
         const displayNumber = parseInt(num) + 1;
-        const position = index + 1;
-        console.log(`位置 ${position} 顯示數字 ${displayNumber}`);
-        return displayNumber === position;
+        return displayNumber === index + 1;
     });
 };
 
@@ -99,7 +96,6 @@ function handleDrop(e) {
         const fromIndex = parseInt(draggedPiece.dataset.index);
         const toIndex = parseInt(dropTarget.dataset.index);
         
-        // 確保來源和目標是不同的位置
         if (fromIndex !== toIndex) {
             // 直接從畫面上交換位置
             const tempText = draggedPiece.textContent;
@@ -115,32 +111,30 @@ function handleDrop(e) {
                     newPieces[fromIndex] = newPieces[toIndex];
                     newPieces[toIndex] = temp;
                     
-                    console.log('交換後的拼圖狀態:', newPieces); // 新增除錯訊息
-                    
-                    // 先檢查是否完成
+                    // 檢查遊戲是否完成
                     const isComplete = checkPuzzleComplete(newPieces);
-                    console.log('遊戲是否完成:', isComplete); // 新增除錯訊息
                     
-                    // 更新資料
-                    puzzle.put({ 
-                        pieces: newPieces, 
-                        isComplete: isComplete 
-                    });
-                    
-                    // 如果遊戲完成，直接觸發獲勝事件
                     if (isComplete) {
-                        announceWinner();
-                        // 遊戲結束時的視覺效果
-                        puzzleContainer.querySelectorAll('.puzzle-piece').forEach(piece => {
-                            piece.style.backgroundColor = '#4CAF50'; // 改變顏色為綠色
-                            piece.style.transform = 'scale(1.05)'; // 稍微放大
+                        // 先停止計時器
+                        stopTimer();
+                        // 然後顯示獲勝畫面
+                        showWinMessage();
+                        // 更新最終狀態
+                        puzzle.put({ 
+                            pieces: newPieces, 
+                            isComplete: true 
+                        });
+                    } else {
+                        // 如果未完成，只更新拼圖狀態
+                        puzzle.put({ 
+                            pieces: newPieces, 
+                            isComplete: false 
                         });
                     }
                 }
             });
         }
     }
-    // 重設拖曳的片段
     draggedPiece = null;
 }
 
@@ -190,6 +184,67 @@ function announceWinner() {
     }, 3000);
 }
 
+// 新增遊戲獲勝訊息顯示函數
+function showWinMessage() {
+    // 創建獲勝視窗
+    const winOverlay = document.createElement('div');
+    winOverlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+    `;
+    
+    const winBox = document.createElement('div');
+    winBox.style.cssText = `
+        background: white;
+        padding: 40px;
+        border-radius: 15px;
+        text-align: center;
+        max-width: 80%;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    `;
+    
+    const elapsed = Math.floor((Date.now() - gameStartTime) / 1000);
+    winBox.innerHTML = `
+        <h2 style="color: #4CAF50; margin-bottom: 20px; font-size: 28px;">🎉 恭喜完成拼圖！</h2>
+        <p style="font-size: 18px; margin-bottom: 20px;">總共花費時間：${Math.floor(elapsed / 60)}分${elapsed % 60}秒</p>
+        <button onclick="this.closest('div').parentElement.remove()" style="
+            margin-top: 20px;
+            padding: 12px 30px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+        ">太棒了！</button>
+    `;
+    
+    // 停止計時器
+    stopTimer();
+    
+    // 在聊天區域顯示完成訊息
+    addChatMessage('系統', `🎉 恭喜！遊戲完成！總共花費時間：${Math.floor(elapsed / 60)}分${elapsed % 60}秒`);
+    
+    winOverlay.appendChild(winBox);
+    document.body.appendChild(winOverlay);
+    
+    // 為所有拼圖片段添加完成效果
+    puzzleContainer.querySelectorAll('.puzzle-piece').forEach(piece => {
+        piece.style.backgroundColor = '#4CAF50';
+        piece.style.transform = 'scale(1.05)';
+        piece.style.transition = 'all 0.5s ease';
+    });
+}
+
 // 聊天功能
 function addChatMessage(sender, message) {
     const messageElement = document.createElement('div');
@@ -207,14 +262,49 @@ function shuffleArray(array) {
     }
 }
 
+// 更新玩家列表顯示
+function updatePlayerDisplay(playerID, isOnline) {
+    const existingBadge = document.querySelector(`[data-player="${playerID}"]`);
+    
+    if (isOnline && !existingBadge) {
+        const playerBadge = document.createElement('div');
+        playerBadge.className = 'player-badge';
+        playerBadge.textContent = playerID;
+        playerBadge.dataset.player = playerID;
+        onlinePlayers.appendChild(playerBadge);
+        console.log(`玩家 ${playerID} 已加入`);
+    } else if (!isOnline && existingBadge) {
+        existingBadge.remove();
+        console.log(`玩家 ${playerID} 已離開`);
+    }
+}
+
 // 事件監聽器
 joinGameButton.addEventListener('click', () => {
     playerName = playerNameInput.value.trim();
     if (playerName) {
-        players.get(playerName).put({ online: true, timestamp: Date.now() });
+        // 更新玩家狀態到 GUN
+        players.get(playerName).put({
+            online: true,
+            timestamp: Date.now(),
+            id: playerName
+        });
+        
+        // 更新 UI
         playerNameInput.disabled = true;
         joinGameButton.disabled = true;
-        addChatMessage('系統', `${playerName} 加入了遊戲`);
+        startGameButton.disabled = false;
+        
+        // 顯示歡迎訊息
+        addChatMessage('系統', `歡迎 ${playerName} 加入遊戲！`);
+        
+        // 立即更新玩家顯示
+        updatePlayerDisplay(playerName, true);
+        
+        // 設定離線處理
+        window.addEventListener('beforeunload', () => {
+            players.get(playerName).put({ online: false });
+        });
     }
 });
 
@@ -248,21 +338,9 @@ puzzle.on((data) => {
     }
 });
 
-// 監聽在線玩家
+// 更新監聽玩家狀態的邏輯
 players.map().on((data, playerID) => {
-    if (data && data.online) {
-        const existingBadge = document.querySelector(`[data-player="${playerID}"]`);
-        if (!existingBadge) {
-            const playerBadge = document.createElement('div');
-            playerBadge.className = 'player-badge';
-            playerBadge.textContent = playerID;
-            playerBadge.dataset.player = playerID;
-            onlinePlayers.appendChild(playerBadge);
-        }
-    } else {
-        const badge = document.querySelector(`[data-player="${playerID}"]`);
-        if (badge) {
-            badge.remove();
-        }
+    if (data) {
+        updatePlayerDisplay(playerID, data.online);
     }
 });
